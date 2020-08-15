@@ -58,12 +58,12 @@ int main(int argc, char** argv){
         get_nosie(n);
         std::vector<float> force = {0,0,0,0};
         for(int p=0; p<4; p++){
-             force[p] = result[0].get(fdeep::tensor_pos(p)) + 1 + n[p];
-            if(force[p] > 2)
-                force[p] = 2;
-            else if(force[p] < 0)
-                force[p] = 0;
-            asv.propellers[p].thrust = force[p]; //N
+             force[p] = result[0].get(fdeep::tensor_pos(p)) + n[p];
+            if(force[p] > 1)
+                force[p] = 1;
+            else if(force[p] < -1)
+                force[p] = -1;
+            asv.propellers[p].thrust = force[p] + 1; //N
             asv.propellers[p].orientation = (struct Dimensions){0.0, 0.0, 0.0};
         }
         time = t * asv.dynamics.time_step_size;
