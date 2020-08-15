@@ -83,8 +83,8 @@ def get_actor():
     inputs = tf.keras.layers.Input(shape=(num_states,))
     out = tf.keras.layers.Dense(512, activation='relu')(inputs)
     out = tf.keras.layers.BatchNormalization()(out)
-    out = tf.keras.layers.Dense(512, activation='relu')(out)
-    out = tf.keras.layers.BatchNormalization()(out)
+    # out = tf.keras.layers.Dense(512, activation='relu')(out)
+    # out = tf.keras.layers.BatchNormalization()(out)
     # outputs = tf.keras.layers.Dense(4, activation='sigmoid', kernel_initializer=last_init)(out)
     outputs = tf.keras.layers.Dense(4, activation='tanh', kernel_initializer=last_init)(out)
     # outputs = outputs * max_action_force
@@ -95,8 +95,8 @@ def get_actor():
 
 def get_critic():
     state_input = tf.keras.layers.Input(shape=(num_states))
-    state_out = tf.keras.layers.Dense(16, activation='relu')(state_input)
-    state_out = tf.keras.layers.BatchNormalization()(state_out)
+    # state_out = tf.keras.layers.Dense(16, activation='relu')(state_input)
+    # state_out = tf.keras.layers.BatchNormalization()(state_out)
     state_out = tf.keras.layers.Dense(32, activation='relu')(state_out)
     state_out = tf.keras.layers.BatchNormalization()(state_out)
 
@@ -108,8 +108,8 @@ def get_critic():
 
     out = tf.keras.layers.Dense(512, activation='relu')(concat)
     out = tf.keras.layers.BatchNormalization()(out)
-    out = tf.keras.layers.Dense(512, activation='relu')(out)
-    out = tf.keras.layers.BatchNormalization()(out)
+    # out = tf.keras.layers.Dense(512, activation='relu')(out)
+    # out = tf.keras.layers.BatchNormalization()(out)
     outputs = tf.keras.layers.Dense(1)(out)
 
     model = tf.keras.Model([state_input, action_input], outputs)
@@ -155,7 +155,7 @@ target_critic = get_critic()
 gamma = 0.99
 
 critic_lr = 0.0001
-actor_lr = 0.001
+actor_lr = 0.0001
 
 tau = 0.005
 
