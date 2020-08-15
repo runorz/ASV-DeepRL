@@ -116,7 +116,7 @@ def get_critic():
 
     return model
 
-def process_file(f):
+def process_file(f, val):
     pre_state = f['pre_state']
     action = f['action']
     reward = f['reward']
@@ -133,9 +133,15 @@ def process_file(f):
 
     print(f"average reward: {np.mean(reward)} ")
     #avg_records.append(np.mean(reward))
-    with open('records.csv', 'a') as fd:
-        fd.write(f'{np.mean(reward)}\n')
-
+    if val == 0:
+        with open('records.csv', 'a') as fd:
+            fd.write(f'{np.mean(reward)}\n')
+    elif val == 1:
+        with open('testing_records.csv', 'a') as fd:
+            fd.write(f'{np.mean(reward)}\n')
+    elif val == 2:
+        with open('testing_target_records.csv', 'a') as fd:
+            fd.write(f'{np.mean(reward)}\n')
 
     for i in range(len(pre_state)):
         buffer.record((pre_state[i], action[i], reward[i], state[i]))
@@ -170,13 +176,26 @@ avg_records = []
 
 for ep in range(total_episodes):
     print(f"In current episode:{ep}")
-    actor_model.save(f'model/action_model.h5', include_optimizer=False)
-    os.system(f"python3 model/convert_model.py model/action_model.h5 model/action_model.json")
-
-    os.system(f"./build/training")
-
-    f = pd.read_csv(f'record/record.csv')
-    process_file(f)
+    val = 0
+    if ep % 10 == 0:
+        val = 2
+        target_actor.save(f'model/target_action_model.h5', include_optimizer=False)
+        os.system(f"python3 model/convert_model.py model/target_action_model.h5 model/target_action_model.json")
+        os.system(f'./build/testing_target')
+        f = pd.read_csv(f'record/record.csv')
+        process_file(f, val)
+        val = 1
+        actor_model.save(f'model/action_model.h5', include_optimizer=False)
+        os.system(f"python3 model/convert_model.py model/action_model.h5 model/action_model.json")
+        os.system(f'./build/testing')
+        f = pd.read_csv(f'record/record.csv')
+        process_file(f, val)
+    else:
+        actor_model.save(f'model/action_model.h5', include_optimizer=False)
+        os.system(f"python3 model/convert_model.py model/action_model.h5 model/action_model.json")
+        os.system(f"./build/training")
+        f = pd.read_csv(f'record/record.csv')
+        process_file(f, val)
 
     for _ in range(10):
         buffer.learn()
