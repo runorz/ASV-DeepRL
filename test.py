@@ -95,16 +95,16 @@ def get_actor():
 
 def get_critic():
     state_input = tf.keras.layers.Input(shape=(num_states))
-    # state_out = tf.keras.layers.Dense(16, activation='relu')(state_input)
+    # state_out = tf.keras.layers.Dense(32, activation='relu')(state_input)
     # state_out = tf.keras.layers.BatchNormalization()(state_out)
-    state_out = tf.keras.layers.Dense(32, activation='relu')(state_out)
-    state_out = tf.keras.layers.BatchNormalization()(state_out)
+    # state_out = tf.keras.layers.Dense(32, activation='relu')(state_out)
+    # state_out = tf.keras.layers.BatchNormalization()(state_input)
 
     action_input = tf.keras.layers.Input(shape=(4))
-    action_out = tf.keras.layers.Dense(32, activation='relu')(action_input)
-    action_out = tf.keras.layers.BatchNormalization()(action_out)
+    # action_out = tf.keras.layers.Dense(32, activation='relu')(action_input)
+    # action_out = tf.keras.layers.BatchNormalization()(action_out)
 
-    concat = tf.keras.layers.Concatenate()([state_out, action_out])
+    concat = tf.keras.layers.Concatenate()([state_input, action_input])
 
     out = tf.keras.layers.Dense(512, activation='relu')(concat)
     out = tf.keras.layers.BatchNormalization()(out)
