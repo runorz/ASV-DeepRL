@@ -16,7 +16,7 @@ extern "C"{
 int main(int argc, char** argv){
 
     std::ofstream f;
-    std::string record_file = "/Users/zhangrun/PycharmProjects/ASV/record/record.csv";
+    std::string record_file = "/lyceum/rz2u19/DeepRL/record/record.csv";
 
     f.open(record_file, std::ios::out | std::ios::in | std::ofstream::trunc);
     f << "pre_state" << "," << "action" << "," << "reward" << "," << "state\n";
@@ -39,7 +39,7 @@ int main(int argc, char** argv){
     std::default_random_engine generator;
     std::normal_distribution<double> dist(0.0, 0.2);
 
-    std::string model_file = "/Users/zhangrun/PycharmProjects/ASV/model/action_model.json";
+    std::string model_file = "/lyceum/rz2u19/DeepRL/model/action_model.json";
 
     const auto action_model = fdeep::load_model(model_file);
 
@@ -52,55 +52,53 @@ int main(int argc, char** argv){
 
     for(; t<max_t; t++){
 
-        if(t%10 != 0){
-            time = t * asv.dynamics.time_step_size;
-            asv_compute_dynamics(&asv, time);
-        }else{
-            const auto result = action_model.predict(
-            {fdeep::tensor(fdeep::tensor_shape(static_cast<std::size_t>(7)),
-            std::vector<float>{prev_angle,prev_normalized_distance,prev_attitude_x,prev_attitude_y,prev_attitude_z, prev_velocity, prev_accelerate})});
-            get_nosie(n);
-            std::vector<float> force = {0,0,0,0};
-            for(int p=0; p<4; p++){
-                 force[p] = result[0].get(fdeep::tensor_pos(p));
-                if(force[p] > 1)
-                    force[p] = 1;
-                else if(force[p] < 0)
-                    force[p] = 0;
-                asv.propellers[p].thrust = force[p]; //N
-                asv.propellers[p].orientation = (struct Dimensions){0.0, 0.0, 0.0};
-            }
-            time = t * asv.dynamics.time_step_size;
-            asv_compute_dynamics(&asv, time);
-
-            float angle, distance, attitude_x, attitude_y, attitude_z, velocity, accelerate;
-            get_state(asv, waypoint, angle, distance, attitude_x, attitude_y, attitude_z, velocity, accelerate);
-            float normalized_distance = 2.0 * atan(distance/50.0) / M_PI;
-
-            //reward
-            float reward = -normalized_distance;
-
-            if(compute_distance(asv.cog_position.x, asv.cog_position.y, waypoint.x, waypoint.y) < 1){
-                f << prev_angle << " " << prev_normalized_distance << " " << prev_attitude_x << " " << prev_attitude_y << " " << prev_attitude_z <<" " << prev_velocity <<" "<<prev_accelerate <<",";
-                f << force[0] << " " << force[1] << " " << force[2] << " " << force[3] <<",";
-                f << 0 << ",";
-                f << angle << " " << normalized_distance << " " << attitude_x << " " << attitude_y << " " << attitude_z << " " << velocity << " " << accelerate << "\n";
-                break;
-            }
-
-            f << prev_angle << " " << prev_normalized_distance << " " << prev_attitude_x << " " << prev_attitude_y << " " << prev_attitude_z <<" " << prev_velocity <<" "<<prev_accelerate <<",";
-            f << force[0] << " " << force[1] << " " << force[2] << " " << force[3] <<",";
-            f << reward << ",";
-            f << angle << " " << normalized_distance << " " << attitude_x << " " << attitude_y << " " << attitude_z <<" " << velocity << " " << accelerate << "\n";
-
-
-            prev_angle = angle;
-            prev_distance = distance;
-            prev_attitude_x = attitude_x;
-            prev_attitude_y = attitude_y;
-            prev_attitude_z = attitude_z;
-            prev_normalized_distance = normalized_distance;
+        const auto result = action_model.predict(
+        {fdeep::tensor(fdeep::tensor_shape(static_cast<std::size_t>(4)),
+        std::vector<float>{prev_angle,prev_normalized_distance,prev_attitude_z, prev_velocity})});
+        get_nosie(n);
+        std::vector<float> force = {0,0,0,0};
+        for(int p=0; p<4; p++){
+             force[p] = result[0].get(fdeep::tensor_pos(p)) + 1;
+            if(force[p] > 2)
+                force[p] = 2;
+            else if(force[p] < 0)
+                force[p] = 0;
+            asv.propellers[p].thrust = force[p]; //N
+            asv.propellers[p].orientation = (struct Dimensions){0.0, 0.0, 0.0};
         }
+        time = t * asv.dynamics.time_step_size;
+        asv_compute_dynamics(&asv, time);
+
+        float angle, distance, attitude_x, attitude_y, attitude_z, velocity, accelerate;
+        get_state(asv, waypoint, angle, distance, attitude_x, attitude_y, attitude_z, velocity, accelerate);
+        float normalized_distance = 2.0 * atan(distance/50.0) / M_PI;
+
+        //reward
+        float reward = -distance;
+
+        if(compute_distance(asv.cog_position.x, asv.cog_position.y, waypoint.x, waypoint.y) < 1){
+            f << prev_angle << " " << prev_normalized_distance << " " << prev_attitude_z <<" " << prev_velocity <<",";
+            f << force[0] << " " << force[1] << " " << force[2] << " " << force[3] <<",";
+            f << 0 << ",";
+            f << angle << " " << normalized_distance << " " << attitude_z << " " << velocity << "\n";
+            break;
+        }
+
+        f << prev_angle << " " << prev_normalized_distance << " " << prev_attitude_z <<" " << prev_velocity <<",";
+        f << force[0] << " " << force[1] << " " << force[2] << " " << force[3] <<",";
+        f << reward << ",";
+        f << angle << " " << normalized_distance << " " << attitude_z <<" " << velocity << "\n";
+
+
+        prev_angle = angle;
+        prev_distance = distance;
+        prev_attitude_x = attitude_x;
+        prev_attitude_y = attitude_y;
+        prev_attitude_z = attitude_z;
+        prev_normalized_distance = normalized_distance;
+        prev_velocity = velocity;
+        prev_accelerate = accelerate;
+
     }
 
     f.close();

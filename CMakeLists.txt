@@ -30,6 +30,17 @@ set(source1
     test.cpp
 )
 
+set(source2
+    asv-swarm/dependency/tomlc99/toml.c
+    asv-swarm/source/io.c
+    asv-swarm/source/regular_wave.c
+    asv-swarm/source/wave.c
+    asv-swarm/source/asv.c
+    test_target.cpp
+)
+
 add_executable(training ${source})
 
 add_executable(testing ${source1})
+
+add_executable(testing_target ${source2})
